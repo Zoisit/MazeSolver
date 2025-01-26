@@ -24,3 +24,16 @@ class Cell():
             self.__win.draw_line(Line(Point(self.__x2, self.__y1), Point(self.__x2, self.__y2)), self.__color)
         if self.has_bottom_wall:
             self.__win.draw_line(Line(Point(self.__x1, self.__y2), Point(self.__x2, self.__y2)), self.__color)
+
+    def draw_move(self, to_cell, undo=False):
+        color = "red"
+        if undo:
+            color = "gray"
+        point1 = Point((self.__x1 + self.__x2) / 2, (self.__y1 + self.__y2) / 2)
+        point2 = Point((to_cell.__x1 + to_cell.__x2) / 2, (to_cell.__y1 + to_cell.__y2) / 2)
+
+        if point1.x > point2.x or (point1.x == point2.x and point1.y > point2.y):
+            point1, point2 = point2, point1
+
+        line = Line(point1, point2)
+        self.__win.draw_line(line, color)
