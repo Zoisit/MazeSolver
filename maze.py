@@ -17,14 +17,14 @@ class Cell():
         self._color = "blue"
 
     def draw(self):
-        if self.has_left_wall:
-            self._win.draw_line(Line(Point(self._x1, self._y1), Point(self._x1, self._y2)), self._color)
-        if self.has_top_wall:
-            self._win.draw_line(Line(Point(self._x1, self._y1), Point(self._x2, self._y1)), self._color)
-        if self.has_right_wall:
-            self._win.draw_line(Line(Point(self._x2, self._y1), Point(self._x2, self._y2)), self._color)
-        if self.has_bottom_wall:
-            self._win.draw_line(Line(Point(self._x1, self._y2), Point(self._x2, self._y2)), self._color)
+        #if self.has_left_wall:
+        self._win.draw_line(Line(Point(self._x1, self._y1), Point(self._x1, self._y2)), self._color if self.has_left_wall else "white")
+        #if self.has_top_wall:
+        self._win.draw_line(Line(Point(self._x1, self._y1), Point(self._x2, self._y1)), self._color if self.has_top_wall else "white")
+        #if self.has_right_wall:
+        self._win.draw_line(Line(Point(self._x2, self._y1), Point(self._x2, self._y2)), self._color if self.has_right_wall else "white")
+       # if self.has_bottom_wall:
+        self._win.draw_line(Line(Point(self._x1, self._y2), Point(self._x2, self._y2)), self._color if self.has_bottom_wall else "white")
 
     def draw_move(self, to_cell, undo=False):
         color = "red"
@@ -51,29 +51,36 @@ class Maze():
 
         self._cells = []
         self._create_cells()
+        self._break_entrance_and_exit()
 
     def _create_cells(self):
         self._cells = []
         for c in range(self._num_cols):
             cur_col = []
-            for r in range(self._num_rows):     
-                cur_col.append(self._draw_cell(c, r))
+            for r in range(self._num_rows):
+                x1 = self._x1 + c * self._cell_size_x
+                x2 = self._x1 + self._cell_size_x + c * self._cell_size_x
+                y1 = self._y1 + r * self._cell_size_y
+                y2 = self._y1 + self._cell_size_y + r * self._cell_size_y
+
+                cell = Cell(x1, x2, y1, y2, self._win)
+
+                cur_col.append(cell)
+                self._draw_cell(cell)
             self._cells.append(cur_col)
 
-    def _draw_cell(self, c, r):
-        x1 = self._x1 + c * self._cell_size_x
-        x2 = self._x1 + self._cell_size_x + c * self._cell_size_x
-        y1 = self._y1 + r * self._cell_size_y
-        y2 = self._y1 + self._cell_size_y + r * self._cell_size_y
-
-        cell = Cell(x1, x2, y1, y2, self._win)
-
+    def _draw_cell(self, cell):       
         if self._win is not None:
             cell.draw()
             self._animate()
 
-        return cell
 
     def _animate(self):
         self._win.redraw()
         time.sleep(0.05)
+
+    def _break_entrance_and_exit(self):
+        self._cells[0][0].has_top_wall = False
+        self._draw_cell(self._cells[0][0])
+        self._cells[-1][-1].has_bottom_wall = False
+        self._draw_cell(self._cells[-1][-1])
