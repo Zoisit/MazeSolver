@@ -1,6 +1,7 @@
 from window import Window
 from figures import Line, Point
 import time
+import random
 
 class Cell():
     def __init__(self, x1:int, x2:int, y1:int, y2:int, win:Window=None, has_left_wall:bool=True, has_right_wall:bool=True, has_top_wall:bool=True, has_bottom_wall:bool=True):
@@ -15,6 +16,7 @@ class Cell():
         self._x1, self._x2, self._y1, self._y2 = x1, x2, y1, y2
         self._win = win
         self._color = "blue"
+        self._visited = False
 
     def draw(self):
         #if self.has_left_wall:
@@ -40,7 +42,7 @@ class Cell():
         self._win.draw_line(line, color)
 
 class Maze():
-    def __init__(self, x1, y1, num_rows, num_cols, cell_size_x, cell_size_y, win=None):
+    def __init__(self, x1, y1, num_rows, num_cols, cell_size_x, cell_size_y, win=None, seed=None):
         self._x1 = x1
         self._y1 = y1
         self._num_rows = num_rows
@@ -52,6 +54,11 @@ class Maze():
         self._cells = []
         self._create_cells()
         self._break_entrance_and_exit()
+        self._break_walls_r(0, 0)
+        self._reset_cells_visited()
+
+        if seed is not None:
+            random.seed(seed)
 
     def _create_cells(self):
         self._cells = []
@@ -69,7 +76,7 @@ class Maze():
                 self._draw_cell(cell)
             self._cells.append(cur_col)
 
-    def _draw_cell(self, cell):       
+    def _draw_cell(self, cell:Cell):       
         if self._win is not None:
             cell.draw()
             self._animate()
@@ -84,3 +91,62 @@ class Maze():
         self._draw_cell(self._cells[0][0])
         self._cells[-1][-1].has_bottom_wall = False
         self._draw_cell(self._cells[-1][-1])
+
+    def _break_walls(self, c1, r1, c2, r2):
+        #right = c + 1
+        if c2 > c1:
+            self._cells[c1][r1].has_right_wall = False
+            self._draw_cell(self._cells[c1][r1])
+            self._cells[c2][r2].has_left_wall = False
+            self._draw_cell(self._cells[c2][r2])
+        #left = c - 1
+        elif c2 < c1:
+            self._cells[c1][r1].has_left_wall = False
+            self._draw_cell(self._cells[c1][r1])
+            self._cells[c2][r2].has_right_wall = False
+            self._draw_cell(self._cells[c2][r2])
+        #top = r - 1
+        elif r2 < r1:
+            self._cells[c1][r1].has_top_wall = False
+            self._draw_cell(self._cells[c1][r1])
+            self._cells[c2][r2].has_bottom_wall = False
+            self._draw_cell(self._cells[c2][r2])
+        #bottom = r + 1
+        elif r2 > r1:
+            self._cells[c1][r1].has_bottom_wall = False
+            self._draw_cell(self._cells[c1][r1])
+            self._cells[c2][r2].has_top_wall = False
+            self._draw_cell(self._cells[c2][r2])
+
+    def _break_walls_r(self, c, r):
+        self._cells[c][r]._visited = True
+
+        while True:
+            to_visit = []
+
+            # potential neighbors:
+            right = c + 1
+            left = c - 1
+            top = r - 1
+            bottom = r + 1
+            if right < self._num_cols and not self._cells[right][r]._visited:
+                to_visit.append((right, r))
+            if left > 0 and not self._cells[left][r]._visited:
+                to_visit.append((left, r))
+            if bottom < self._num_rows and not self._cells[c][bottom]._visited:
+                to_visit.append((c, bottom))
+            if top > 0 and not self._cells[c][top]._visited:
+                to_visit.append((c, top))
+
+            if len(to_visit) == 0:
+                self._draw_cell(self._cells[c][r])
+                return
+            
+            next = random.randint(0, len(to_visit)-1)
+            self._break_walls(c, r, to_visit[next][0], to_visit[next][1])
+            self._break_walls_r(to_visit[next][0], to_visit[next][1])
+
+    def _reset_cells_visited(self):
+        for c in range(self._num_cols):
+            for r in range(self._num_rows):
+                self._cells[c][r]._visited = False
