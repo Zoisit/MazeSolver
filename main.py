@@ -16,7 +16,12 @@ def main():
     # cell1.draw_move(cell2)
     # cell2.draw_move(cell3, True)
 
-    maze = Maze(50, 50, 5, 7, 100, 100, win)
+    offset_x, offset_y = 10, 10
+    cell_size_x, cell_size_y = 20, 20
+    num_rows = (600 - 2* offset_y) // cell_size_y
+    num_cols = (800 - 2* offset_x) // cell_size_x
+    maze = Maze(offset_x, offset_y, num_rows, num_cols, cell_size_x, cell_size_y, win)
+    maze.solve()
 
     win.wait_for_close()
 

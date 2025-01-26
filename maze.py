@@ -41,6 +41,9 @@ class Cell():
         line = Line(point1, point2)
         self._win.draw_line(line, color)
 
+    def get_middle_point(self) -> Point:
+        return Point((self._x1 + self._x2) / 2, (self._y1 + self._y2) / 2)
+
 class Maze():
     def __init__(self, x1, y1, num_rows, num_cols, cell_size_x, cell_size_y, win=None, seed=None):
         self._x1 = x1
@@ -150,3 +153,43 @@ class Maze():
         for c in range(self._num_cols):
             for r in range(self._num_rows):
                 self._cells[c][r]._visited = False
+
+    def _solve_r(self, c, r):
+        
+        self._animate()
+        self._cells[c][r]._visited = True
+
+        if c == self._num_cols - 1 and r == self._num_rows -1:
+            return True
+        
+        middle_point =  self._cells[c][r].get_middle_point()
+
+        # potential neighbors:
+        to_visit = []
+        if c + 1 < self._num_cols and not self._cells[c + 1][r]._visited and not self._cells[c][r].has_right_wall:
+            to_visit.append((c + 1, r))
+        
+        if r + 1 < self._num_rows and not self._cells[c][r + 1]._visited and not self._cells[c][r].has_bottom_wall:
+            to_visit.append((c, r + 1))
+        left = c - 1
+        if left > 0 and not self._cells[left][r]._visited and not self._cells[c][r].has_left_wall:
+            to_visit.append((left, r))
+        top = r - 1
+        if top > 0 and not self._cells[c][top]._visited and not self._cells[c][r].has_top_wall:
+            to_visit.append((c, top))
+        
+        
+
+        for neighbor in to_visit:
+            self._win.draw_line(Line(middle_point, self._cells[neighbor[0]][neighbor[1]].get_middle_point()), "orange")
+            result = self._solve_r(neighbor[0], neighbor[1])
+            if result:
+                return result
+            else:
+                self._win.draw_line(Line(middle_point, self._cells[neighbor[0]][neighbor[1]].get_middle_point()), "white")
+
+        return False
+
+    def solve(self):
+        self._solve_r(0, 0)
+
